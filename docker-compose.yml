@@ -9,6 +9,16 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
 
   db-init:
     image: mcr.microsoft.com/mssql-tools:latest
@@ -21,9 +31,11 @@ services:
       - ./chn-examen-api/script.sql:/scripts/script.sql:ro
     entrypoint: ["/bin/sh", "-c"]
     command: >
-      "until /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -Q \"SELECT 1\" >/dev/null 2>&1;
-      do echo 'Waiting for SQL Server...'; sleep 2; done;
-      /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -d master -i /scripts/script.sql"
+      "for i in $$(seq 1 60); do
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -Q \"SELECT 1\" >/dev/null 2>&1 && break;
+      echo 'Waiting for SQL Server...'; sleep 2;
+      done;
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -d master -i /scripts/script.sql"
     restart: "no"
 
   api:
@@ -32,8 +44,8 @@ services:
       dockerfile: Dockerfile
     container_name: chn-examen-api
     depends_on:
-      db-init:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://db:1433;databaseName=chn_examen;trustServerCertificate=true;encrypt=false
       SPRING_DATASOURCE_USERNAME: sa
