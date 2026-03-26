@@ -45,6 +45,11 @@ Servicios levantados:
 - Backend API: `http://localhost:8080/api`
 - SQL Server: `localhost:1433`
 
+> **🔑 Credenciales de acceso:** 
+> Una vez levantado el proyecto web, puedes iniciar sesión con las cuentas por defecto inyectadas en la base de datos:
+> - **Usuario:** `admin`
+> - **Contraseña:** `admin`
+
 ## 🔗 Repositorios Originales
 
 Este proyecto consolida el código de los siguientes repositorios individuales que en su momento formaron el alcance del examen:
