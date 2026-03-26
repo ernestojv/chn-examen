@@ -1,0 +1,56 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: var(--topbar-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-spacer {
+  flex: 1;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease;
+}
+
+.topbar-user:hover {
+  background: var(--color-bg);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.user-avatar {
+  background-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+  font-weight: 700;
+}
+
+.chevron-icon {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}

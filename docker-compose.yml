@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: chn-examen-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_SA_PASSWORD:-YourStrong@Passw0rd}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+  db-init:
+    image: mcr.microsoft.com/mssql-tools:latest
+    container_name: chn-examen-db-init
+    depends_on:
+      - db
+    environment:
+      SA_PASSWORD: ${DB_SA_PASSWORD:-YourStrong@Passw0rd}
+    volumes:
+      - ./chn-examen-api/script.sql:/scripts/script.sql:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "until /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -Q \"SELECT 1\" >/dev/null 2>&1;
+      do echo 'Waiting for SQL Server...'; sleep 2; done;
+      /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P \"$$SA_PASSWORD\" -C -d master -i /scripts/script.sql"
+    restart: "no"
+
+  api:
+    build:
+      context: ./chn-examen-api
+      dockerfile: Dockerfile
+    container_name: chn-examen-api
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://db:1433;databaseName=chn_examen;trustServerCertificate=true;encrypt=false
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ${DB_SA_PASSWORD:-YourStrong@Passw0rd}
+      JWT_SECRET: ${JWT_SECRET:-6A586E327235753878214125442A472D4B614E645267556B586E3272357538782141}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:4200
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ./chn-examen-web
+      dockerfile: Dockerfile
+    container_name: chn-examen-web
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
+
+volumes:
+  sqlserver_data:

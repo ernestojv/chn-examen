@@ -1,0 +1,142 @@
+<p-toast position="top-right" />
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Pagos</h1>
+      <span class="page-subtitle">Registro y control de abonos a préstamos</span>
+    </div>
+    <p-button label="Registrar Pago" icon="pi pi-plus" (onClick)="onNew()" severity="success" />
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Filtrar por Préstamo</label>
+        <p-select
+          [options]="loans()"
+          [ngModel]="filterLoanId()"
+          (ngModelChange)="filterLoanId.set($event); filterUserId.set(null);"
+          optionValue="id"
+          [filter]="true"
+          filterBy="id"
+          [showClear]="true"
+          placeholder="Todos los préstamos"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>{{ getLoanLabel(selected.id) }}</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-loan>
+            <div>{{ getLoanLabel(loan.id) }}</div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>Filtrar por Usuario (Cajero)</label>
+        <p-select
+          [options]="users()"
+          [ngModel]="filterUserId()"
+          (ngModelChange)="filterUserId.set($event); filterLoanId.set(null);"
+          optionValue="id"
+          [filter]="true"
+          filterBy="username"
+          [showClear]="true"
+          placeholder="Todos los usuarios"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>@{{ selected.username }}</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-user>
+            <div>@{{ user.username }} <small>(ID: {{ user.id }})</small></div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="filter-actions">
+        <p-button label="Limpiar" severity="secondary" [text]="true" (onClick)="clearFilters()" icon="pi pi-times" />
+        <p-button label="Filtrar" (onClick)="applyFilters()" [loading]="isFiltering()" icon="pi pi-filter" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="payments()"
+      [loading]="loading()"
+      styleClass="p-datatable-gridlines"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th pSortableColumn="loanId">Préstamo <p-sortIcon field="loanId" /></th>
+          <th pSortableColumn="paymentDate">Fecha <p-sortIcon field="paymentDate" /></th>
+          <th pSortableColumn="paymentMethod">Método <p-sortIcon field="paymentMethod" /></th>
+          <th pSortableColumn="amountPaid">Monto Pagado <p-sortIcon field="amountPaid" /></th>
+          <th pSortableColumn="registeredById">Registrado por <p-sortIcon field="registeredById" /></th>
+          <th style="width: 100px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #loadingbody>
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td style="text-align:center"><p-skeleton width="3rem" styleClass="m-auto" /></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template #body let-payment>
+        <tr>
+          <td>{{ payment.id }}</td>
+          <td>{{ getLoanLabel(payment.loanId) }}</td>
+          <td>{{ payment.paymentDate | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ payment.paymentMethod }}</td>
+          <td class="font-bold text-success">
+            {{ payment.amountPaid | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+          </td>
+          <td>
+            <span class="text-500 text-sm">ID: {{ payment.registeredById }}</span>
+          </td>
+          <td style="text-align: center">
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              pTooltip="Anular Pago"
+              disabled
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="empty-message">
+            <span class="pi pi-money-bill empty-icon"></span>
+            <p>No hay pagos registrados para el filtro seleccionado.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+@if (showForm()) {
+  <app-payment-form
+    [loans]="loans()"
+    [customers]="customers()"
+    (saved)="onSaved()"
+    (cancelled)="onCancelled()"
+  />
+}

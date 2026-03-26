@@ -1,0 +1,25 @@
+server:
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: chn-examen-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:sqlserver://localhost:1433;databaseName=chn_examen;trustServerCertificate=true;encrypt=false}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:admin123}
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:6A586E327235753878214125442A472D4B614E645267556B586E3272357538782141}

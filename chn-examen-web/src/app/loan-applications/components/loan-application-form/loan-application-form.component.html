@@ -1,0 +1,212 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="isEditMode ? 'Detalles de la Solicitud' : 'Nueva Solicitud'"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [contentStyle]="{ 'min-height': '400px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+>
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-4" />
+  }
+
+  @if (!isEditMode) {
+    <!-- CREATE MODE -->
+    <form [formGroup]="form" (ngSubmit)="onSubmitBasic()" class="form-grid">
+      <div class="field full-width">
+        <label class="field-label">Cliente <span class="required">*</span></label>
+        <p-select
+          formControlName="customerId"
+          [options]="customers()"
+          optionValue="id"
+          [filter]="true"
+          filterBy="firstName,lastName,nit"
+          appendTo="body"
+          placeholder="Selecciona un cliente"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>{{ selected.firstName }} {{ selected.lastName }} ({{ selected.nit }})</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-customer>
+            <div>{{ customer.firstName }} {{ customer.lastName }} <small>({{ customer.nit }})</small></div>
+          </ng-template>
+        </p-select>
+        @if (isInvalid(form, 'customerId')) { <small class="field-error">Debe seleccionar un cliente.</small> }
+      </div>
+
+      <div class="field mt-3">
+        <label class="field-label">Monto Solicitado <span class="required">*</span></label>
+        <p-inputnumber
+          formControlName="requestedAmount"
+          mode="currency"
+          currency="GTQ"
+          locale="es-GT"
+          styleClass="w-full"
+          class="w-full"
+          [min]="0.01"
+        />
+        @if (isInvalid(form, 'requestedAmount')) { <small class="field-error">Monto mayor a 0.</small> }
+      </div>
+
+      <div class="field mt-3">
+        <label class="field-label">Plazo (meses) <span class="required">*</span></label>
+        <p-inputnumber
+          formControlName="termInMonths"
+          styleClass="w-full"
+          class="w-full"
+          [min]="1"
+          [max]="360"
+        />
+        @if (isInvalid(form, 'termInMonths')) { <small class="field-error">Plazo mínimo 1 mes.</small> }
+      </div>
+    </form>
+  } @else {
+    <!-- DETAILS MODE -->
+    <div class="details-panel mb-4">
+      <h3 class="section-title mt-0 mb-3 text-primary border-bottom-1 surface-border pb-2">
+        <i class="pi pi-user"></i>Datos del Cliente
+      </h3>
+      <div class="grid detail-grid">
+        <div class="detail-item full-width">
+          <strong>Nombre:</strong>
+          <span>{{ fullCustomer?.firstName }} {{ fullCustomer?.lastName }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>NIT:</strong>
+          <span>{{ fullCustomer?.nit }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Teléfono:</strong>
+          <span>{{ fullCustomer?.phoneNumber || 'N/D' }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Email:</strong>
+          <span>{{ fullCustomer?.email || 'N/D' }}</span>
+        </div>
+        <div class="detail-item full-width">
+          <strong>Dirección:</strong>
+          <span>{{ fullCustomer?.address || 'N/D' }}</span>
+        </div>
+      </div>
+
+      <h3 class="section-title section-title-spaced mt-4 mb-3 text-primary border-bottom-1 surface-border pb-2">
+        <i class="pi pi-wallet"></i>Información del Préstamo
+      </h3>
+      <div class="grid detail-grid">
+        <div class="detail-item">
+          <strong>Monto Solicitado:</strong>
+          <span class="font-bold text-primary">{{ app?.requestedAmount | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Plazo:</strong>
+          <span>{{ app?.termInMonths }} meses</span>
+        </div>
+        <div class="detail-item">
+          <strong>Fecha de Aplicación:</strong>
+          <span>{{ app?.applicationDate | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="detail-item">
+          <strong>Estado:</strong>
+          <p-tag [severity]="currentStatus === 'APPROVED' ? 'success' : currentStatus === 'REJECTED' ? 'danger' : 'warn'">
+            {{ currentStatus === 'APPROVED' ? 'Aprobado' : currentStatus === 'REJECTED' ? 'Rechazado' : 'Pendiente' }}
+          </p-tag>
+        </div>
+      </div>
+    </div>
+
+    @if (canBeEvaluated) {
+      <div class="evaluation-panel mb-4">
+        <h3 class="section-title mt-0 mb-3 text-primary">
+          <i class="pi pi-check-circle"></i>Evaluar Solicitud
+        </h3>
+        
+        <form [formGroup]="resolutionForm" (ngSubmit)="onSubmitResolution()" class="form-grid">
+          <div class="field full-width">
+            <label class="field-label">Resolución <span class="required">*</span></label>
+            <div class="flex gap-3">
+              <div class="flex-1">
+                <p-select
+                  formControlName="status"
+                  [options]="statusOptions"
+                  optionValue="value"
+                  optionLabel="label"
+                  appendTo="body"
+                  placeholder="Seleccione la resolución"
+                  styleClass="w-full"
+                />
+                @if (isInvalid(resolutionForm, 'status')) { <small class="field-error">Requerido.</small> }
+              </div>
+              
+              @if (resolutionForm.get('status')?.value === 'APPROVED') {
+                <div class="flex-1">
+                  <p-inputnumber
+                    formControlName="approvedAmount"
+                    mode="currency"
+                    currency="GTQ"
+                    locale="es-GT"
+                    styleClass="w-full"
+                    class="w-full"
+                    [min]="0.01"
+                    placeholder="Monto a aprobar"
+                  />
+                  @if (isInvalid(resolutionForm, 'approvedAmount')) { <small class="field-error">Debe ingresar el monto aprobado mayor a 0.</small> }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="field full-width mt-3">
+            <label class="field-label">Evaluador responsable <span class="required">*</span></label>
+            <p-select
+              formControlName="evaluatedById"
+              [options]="employees()"
+              optionValue="id"
+              [filter]="true"
+              filterBy="firstName,lastName,employeeCode"
+              appendTo="body"
+              placeholder="Selecciona el evaluador"
+              styleClass="w-full"
+            >
+              <ng-template pTemplate="selectedItem" let-selected>
+                <div>{{ selected.firstName }} {{ selected.lastName }}</div>
+              </ng-template>
+              <ng-template pTemplate="item" let-emp>
+                <div>{{ emp.firstName }} {{ emp.lastName }} <small>({{ emp.employeeCode }})</small></div>
+              </ng-template>
+            </p-select>
+            @if (isInvalid(resolutionForm, 'evaluatedById')) { <small class="field-error">Requerido.</small> }
+          </div>
+
+          <div class="field full-width mt-3">
+            <label class="field-label">Detalles de la resolución</label>
+            <textarea pTextarea formControlName="resolutionDetails" rows="3" class="w-full" placeholder="Justificación y observaciones adicionales"></textarea>
+          </div>
+        </form>
+      </div>
+    } @else if (currentStatus !== 'PENDING') {
+      <div class="resolution-panel mb-4">
+        <h4 class="section-title mt-0 mb-2 text-primary">
+          <i class="pi pi-file-check"></i>Resolución Registrada
+        </h4>
+        <p class="mt-0 mb-0 font-italic text-sm line-height-3 text-700">
+          {{ app?.resolutionDetails || 'Sin detalles u observaciones adicionales.' }}
+        </p>
+      </div>
+    }
+  }
+
+  <ng-template #footer>
+    <div class="dialog-footer flex justify-content-end gap-2 pt-3">
+      <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="onClose()" [disabled]="loading()" />
+      
+      @if (!isEditMode) {
+        <p-button label="Crear Solicitud" icon="pi pi-save" (onClick)="onSubmitBasic()" [loading]="loading()" />
+      } @else if (canBeEvaluated) {
+        <p-button label="Confirmar Evaluación" icon="pi pi-check-circle" severity="success" (onClick)="onSubmitResolution()" [loading]="loading()" />
+      }
+    </div>
+  </ng-template>
+</p-dialog>

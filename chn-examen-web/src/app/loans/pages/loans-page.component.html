@@ -1,0 +1,190 @@
+<p-toast position="top-right" />
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Préstamos</h1>
+      <span class="page-subtitle">Seguimiento de saldos y estados de pago</span>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Filtrar por Cliente</label>
+        <p-select
+          [options]="customers()"
+          [ngModel]="filterCustomerId()"
+          (ngModelChange)="filterCustomerId.set($event)"
+          optionValue="id"
+          [filter]="true"
+          filterBy="firstName,lastName,nit"
+          [showClear]="true"
+          placeholder="Todos los clientes"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>{{ selected.firstName }} {{ selected.lastName }}</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-customer>
+            <div>{{ customer.firstName }} {{ customer.lastName }} <small>({{ customer.nit }})</small></div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="filter-actions">
+        <p-button label="Limpiar" severity="secondary" [text]="true" (onClick)="clearFilters()" icon="pi pi-times" />
+        <p-button label="Filtrar" (onClick)="applyFilters()" [loading]="isFiltering()" icon="pi pi-filter" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="loans()"
+      [loading]="loading()"
+      styleClass="p-datatable-gridlines"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th pSortableColumn="customerId">Cliente <p-sortIcon field="customerId" /></th>
+          <th pSortableColumn="approvedAmount">Monto Aprobado <p-sortIcon field="approvedAmount" /></th>
+          <th pSortableColumn="outstandingBalance">Saldo Pendiente <p-sortIcon field="outstandingBalance" /></th>
+          <th pSortableColumn="paymentStatus">Estado de Pago <p-sortIcon field="paymentStatus" /></th>
+          <th style="width: 100px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #loadingbody>
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td style="text-align:center"><p-skeleton width="3rem" styleClass="m-auto" /></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template #body let-loan>
+        <tr>
+          <td>{{ loan.id }}</td>
+          <td>{{ getCustomerName(loan.customerId) }}</td>
+          <td class="font-semibold text-primary">
+            {{ loan.approvedAmount | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+          </td>
+          <td class="font-bold" [class.text-danger]="loan.outstandingBalance > 0">
+            {{ loan.outstandingBalance | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+          </td>
+          <td>
+            <p-tag [severity]="getStatusSeverity(loan.paymentStatus)" [value]="getStatusLabel(loan.paymentStatus)" />
+          </td>
+          <td style="text-align: center">
+            <p-button
+              icon="pi pi-eye"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              pTooltip="Ver Detalles"
+              (onClick)="onViewDetails(loan)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="empty-message">
+            <span class="pi pi-wallet empty-icon"></span>
+            <p>No se encontraron préstamos activos.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog 
+  [(visible)]="showDetailsDialog" 
+  [modal]="true" 
+  header="Detalles del Préstamo" 
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false">
+  
+  @if (selectedLoan(); as loan) {
+    <div class="details-container">
+      
+      <!-- Customer Information -->
+      <div class="details-panel mb-4">
+        <h3 class="section-title mt-0 mb-3 text-primary border-bottom-1 surface-border pb-2">
+          <i class="pi pi-user"></i>Información del Cliente
+        </h3>
+        @if (getCustomer(loan.customerId); as c) {
+          <div class="grid detail-grid">
+            <div class="detail-item full-width">
+              <strong>Nombre Completo:</strong>
+              <span>{{ c.firstName }} {{ c.lastName }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>NIT:</strong>
+              <span>{{ c.nit }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Teléfono:</strong>
+              <span>{{ c.phoneNumber }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <strong>Email:</strong>
+              <span>{{ c.email || 'N/A' }}</span>
+            </div>
+          </div>
+        } @else {
+          <p>Cliente no encontrado.</p>
+        }
+      </div>
+
+      <!-- Loan Information -->
+      <div class="details-panel">
+        <h3 class="section-title mt-0 mb-3 text-primary border-bottom-1 surface-border pb-2">
+          <i class="pi pi-wallet"></i>Información del Préstamo
+        </h3>
+        <div class="grid detail-grid">
+          <div class="detail-item">
+            <strong>ID Préstamo:</strong>
+            <span>#{{ loan.id }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>ID Solicitud Origen:</strong>
+            <span>#{{ loan.loanApplicationId }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Monto Aprobado:</strong>
+            <span class="font-bold text-primary">{{ loan.approvedAmount | currency:'GTQ':'symbol-narrow':'1.2-2' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Saldo Pendiente:</strong>
+            <span class="font-bold" [class.text-danger]="loan.outstandingBalance > 0">
+              {{ loan.outstandingBalance | currency:'GTQ':'symbol-narrow':'1.2-2' }}
+            </span>
+          </div>
+          <div class="detail-item full-width mt-2">
+            <strong>Estado de Pago:</strong>
+            <div>
+              <p-tag [severity]="getStatusSeverity(loan.paymentStatus)" [value]="getStatusLabel(loan.paymentStatus)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Cerrar" icon="pi pi-times" [text]="true" (onClick)="showDetailsDialog.set(false)" />
+  </ng-template>
+</p-dialog>

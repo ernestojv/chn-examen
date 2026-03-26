@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+/* ──────────────────────────────────────────────
+   Design Tokens — consumed by all components
+   ────────────────────────────────────────────── */
+:root {
+  /* Brand palette */
+  --color-primary:        #1e3a5f;
+  --color-primary-light:  #2a4f82;
+  --color-accent:         #3b82f6;
+  --color-accent-soft:    rgba(59, 130, 246, 0.15);
+
+  /* Surfaces */
+  --color-bg:             #f0f4fb;
+  --color-surface:        #ffffff;
+  --color-border:         #e2e8f0;
+
+  /* Text */
+  --color-text-primary:   #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-muted:     #9ca3af;
+  --color-text-inverse:   #ffffff;
+
+  /* Sidebar */
+  --color-sidebar-bg:     #1e3a5f;
+  --color-sidebar-hover:  rgba(255, 255, 255, 0.08);
+  --color-sidebar-active: rgba(255, 255, 255, 0.15);
+  --color-sidebar-text:   rgba(255, 255, 255, 0.75);
+
+  /* Shadows */
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg:  0 8px 40px rgba(0, 0, 0, 0.12);
+
+  /* Layout */
+  --sidebar-width:  240px;
+  --topbar-height:  64px;
+  --radius-md:      10px;
+  --radius-lg:      16px;
+}
+
+/* ──────────────────────────────────────────────
+   Global reset
+   ────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}

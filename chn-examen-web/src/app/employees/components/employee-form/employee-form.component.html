@@ -1,0 +1,64 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="isEditMode ? 'Editar empleado' : 'Nuevo empleado'"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+>
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-4" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-grid">
+
+    <div class="field full-width">
+      <label class="field-label">Código de empleado <span class="required">*</span></label>
+      <input pInputText formControlName="employeeCode" placeholder="EMP-001" class="w-full" maxlength="50" />
+      @if (isInvalid('employeeCode')) {
+        <small class="field-error">El código es requerido.</small>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label">Nombre <span class="required">*</span></label>
+      <input pInputText formControlName="firstName" placeholder="Ana" class="w-full" maxlength="100" />
+      @if (isInvalid('firstName')) {
+        <small class="field-error">El nombre es requerido.</small>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label">Apellido <span class="required">*</span></label>
+      <input pInputText formControlName="lastName" placeholder="Gómez" class="w-full" maxlength="100" />
+      @if (isInvalid('lastName')) {
+        <small class="field-error">El apellido es requerido.</small>
+      }
+    </div>
+
+    <div class="field full-width">
+      <label class="field-label">Puesto</label>
+      <input pInputText formControlName="position" placeholder="Analista de créditos" class="w-full" maxlength="100" />
+    </div>
+
+  </form>
+
+  <ng-template #footer>
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onClose()"
+        [disabled]="loading()"
+      />
+      <p-button
+        [label]="isEditMode ? 'Guardar cambios' : 'Crear empleado'"
+        icon="pi pi-check"
+        (onClick)="onSubmit()"
+        [loading]="loading()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

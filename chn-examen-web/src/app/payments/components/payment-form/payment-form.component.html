@@ -1,0 +1,83 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  header="Registrar Nuevo Pago"
+  [style]="{ width: '500px' }"
+  [contentStyle]="{ 'min-height': '380px' }"
+  [closable]="!loading()"
+  (onHide)="onClose()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
+    <div class="field">
+      <label class="field-label">Préstamo <span class="required">*</span></label>
+      <p-select
+        formControlName="loanId"
+        [options]="loans()"
+        optionValue="id"
+        [filter]="true"
+        filterBy="id"
+        appendTo="body"
+        placeholder="Seleccione el préstamo"
+        styleClass="w-full"
+      >
+        <ng-template pTemplate="selectedItem" let-selected>
+          <div>{{ getLoanLabel(selected) }}</div>
+        </ng-template>
+        <ng-template pTemplate="item" let-loan>
+          <div>{{ getLoanLabel(loan) }}</div>
+        </ng-template>
+      </p-select>
+      @if (isInvalid('loanId')) { <small class="field-error">Requerido.</small> }
+    </div>
+
+    <div class="field mt-3">
+      <label class="field-label">Monto del Pago <span class="required">*</span></label>
+      <p-inputnumber
+        formControlName="amountPaid"
+        mode="currency"
+        currency="GTQ"
+        locale="es-GT"
+        [min]="0.01"
+        styleClass="w-full"
+        placeholder="Ingrese el monto"
+      />
+      @if (isInvalid('amountPaid')) { <small class="field-error">Monto requerido mayor a 0.</small> }
+    </div>
+
+    <div class="field mt-3">
+      <label class="field-label">Método de Pago <span class="required">*</span></label>
+      <p-select
+        formControlName="paymentMethod"
+        [options]="methodOptions"
+        optionValue="value"
+        optionLabel="label"
+        appendTo="body"
+        placeholder="Seleccione método"
+        styleClass="w-full"
+      />
+      @if (isInvalid('paymentMethod')) { <small class="field-error">Requerido.</small> }
+    </div>
+
+    @if (errorMessage()) {
+      <p-message severity="error" [text]="errorMessage()!" styleClass="mt-3 w-full" />
+    }
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="form-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onClose()"
+        [disabled]="loading()"
+      />
+      <p-button
+        label="Registrar Pago"
+        [loading]="loading()"
+        [disabled]="loading() || !currentUserId || form.invalid"
+        (onClick)="onSubmit()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,173 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Solicitudes de Préstamo</h1>
+      <span class="page-subtitle">Gestión y evaluación de solicitudes</span>
+    </div>
+    <p-button label="Nueva solicitud" icon="pi pi-plus" (onClick)="onNew()" />
+  </div>
+
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Cliente</label>
+        <p-select
+          [options]="customers()"
+          [ngModel]="filterCustomerId()"
+          (ngModelChange)="filterCustomerId.set($event)"
+          optionValue="id"
+          [filter]="true"
+          filterBy="firstName,lastName,nit"
+          [showClear]="true"
+          placeholder="Todos los clientes"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>{{ selected.firstName }} {{ selected.lastName }}</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-customer>
+            <div>{{ customer.firstName }} {{ customer.lastName }} <small>({{ customer.nit }})</small></div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>Estado</label>
+        <p-select
+          [options]="statusOptions"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)"
+          optionValue="value"
+          optionLabel="label"
+          [showClear]="true"
+          placeholder="Cualquier estado"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="filter-field">
+        <label>Evaluador</label>
+        <p-select
+          [options]="employees()"
+          [ngModel]="filterEvaluatorId()"
+          (ngModelChange)="filterEvaluatorId.set($event)"
+          optionValue="id"
+          [filter]="true"
+          filterBy="firstName,lastName,employeeCode"
+          [showClear]="true"
+          placeholder="Todos los evaluadores"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-selected>
+            <div>{{ selected.firstName }} {{ selected.lastName }}</div>
+          </ng-template>
+          <ng-template pTemplate="item" let-emp>
+            <div>{{ emp.firstName }} {{ emp.lastName }} <small>({{ emp.employeeCode }})</small></div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="filter-actions">
+        <p-button label="Limpiar" severity="secondary" [text]="true" (onClick)="clearFilters()" icon="pi pi-times" />
+        <p-button label="Aplicar filtros" (onClick)="applyFilters()" [loading]="isFiltering()" icon="pi pi-filter" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="applications()"
+      [loading]="loading()"
+      styleClass="p-datatable-gridlines"
+      [tableStyle]="{ 'min-width': '60rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="id" style="width: 60px"># <p-sortIcon field="id" /></th>
+          <th pSortableColumn="applicationDate">Fecha <p-sortIcon field="applicationDate" /></th>
+          <th pSortableColumn="customerId">Cliente <p-sortIcon field="customerId" /></th>
+          <th pSortableColumn="requestedAmount">Monto <p-sortIcon field="requestedAmount" /></th>
+          <th pSortableColumn="termInMonths">Plazo <p-sortIcon field="termInMonths" /></th>
+          <th pSortableColumn="status">Estado <p-sortIcon field="status" /></th>
+          <th pSortableColumn="evaluatedBy">Evaluador <p-sortIcon field="evaluatedBy" /></th>
+          <th style="width: 120px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #loadingbody>
+        @for (_ of [1,2,3,4,5,6]; track $index) {
+          <tr>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td style="text-align:center"><p-skeleton width="5rem" styleClass="m-auto" /></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template #body let-app>
+        <tr>
+          <td>{{ app.id }}</td>
+          <td>{{ app.applicationDate | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ getCustomerName(app.customerId) }}</td>
+          <td class="font-semibold text-primary">{{ app.requestedAmount | currency:'GTQ':'symbol-narrow':'1.2-2' }}</td>
+          <td>{{ app.termInMonths }} meses</td>
+          <td>
+            <p-tag [severity]="getStatusSeverity(app.status)" [value]="getStatusLabel(app.status)" />
+          </td>
+          <td>
+            @if (app.evaluatedBy) {
+              {{ getEvaluatorName(app.evaluatedBy) }}
+            } @else {
+              <span class="text-muted text-sm italic">Sin asignar</span>
+            }
+          </td>
+          <td class="action-cell">
+            <p-button
+              icon="pi pi-eye"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              (onClick)="onEdit(app)"
+              pTooltip="Ver Detalles"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              (onClick)="onDelete(app)"
+              pTooltip="Eliminar"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="8" class="empty-message">
+            <span class="pi pi-inbox empty-icon"></span>
+            <p>No se encontraron solicitudes con los filtros aplicados.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+@if (showForm()) {
+  <app-loan-application-form
+    [application]="formApplication() ?? null"
+    [customers]="customers()"
+    [employees]="employees()"
+    (saved)="onSaved($event)"
+    (cancelled)="onCancelled()"
+  />
+}

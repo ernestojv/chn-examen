@@ -1,0 +1,18 @@
+<header class="topbar">
+  <div class="topbar-spacer"></div>
+
+  <div class="topbar-user" (click)="userMenu.toggle($event)">
+    <div class="user-info">
+      <span class="user-name">{{ username() }}</span>
+      <span class="user-role">Sistema CHN</span>
+    </div>
+    <p-avatar
+      [label]="username().charAt(0).toUpperCase()"
+      shape="circle"
+      styleClass="user-avatar"
+    />
+    <span class="pi pi-chevron-down chevron-icon"></span>
+  </div>
+
+  <p-menu #userMenu [model]="userMenuItems" [popup]="true" />
+</header>

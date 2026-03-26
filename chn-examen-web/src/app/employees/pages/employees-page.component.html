@@ -1,0 +1,100 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-group">
+      <h1 class="page-title">Empleados</h1>
+      <span class="page-subtitle">Administración de empleados del sistema</span>
+    </div>
+    <p-button label="Nuevo empleado" icon="pi pi-plus" (onClick)="onNew()" />
+  </div>
+
+  <div class="page-toolbar">
+    <p-iconfield iconPosition="left" styleClass="search-field">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        type="text"
+        placeholder="Buscar por nombre, código o puesto..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </p-iconfield>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="filteredEmployees()"
+      [loading]="loading()"
+      styleClass="p-datatable-gridlines"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="id" style="width: 60px"># <p-sortIcon field="id" /></th>
+          <th pSortableColumn="employeeCode">Código <p-sortIcon field="employeeCode" /></th>
+          <th pSortableColumn="firstName">Nombre <p-sortIcon field="firstName" /></th>
+          <th pSortableColumn="position">Puesto <p-sortIcon field="position" /></th>
+          <th style="width: 120px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #loadingbody>
+        @for (_ of [1,2,3,4,5,6]; track $index) {
+          <tr>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td><p-skeleton /></td>
+            <td style="text-align:center"><p-skeleton width="5rem" styleClass="m-auto" /></td>
+          </tr>
+        }
+      </ng-template>
+
+      <ng-template #body let-employee>
+        <tr>
+          <td>{{ employee.id }}</td>
+          <td>{{ employee.employeeCode }}</td>
+          <td>{{ employee.firstName }} {{ employee.lastName }}</td>
+          <td>{{ employee.position ?? '—' }}</td>
+          <td class="action-cell">
+            <p-button
+              icon="pi pi-pencil"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              (onClick)="onEdit(employee)"
+              pTooltip="Editar"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              (onClick)="onDelete(employee)"
+              pTooltip="Eliminar"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="empty-message">
+            <span class="pi pi-inbox empty-icon"></span>
+            <p>No se encontraron empleados.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+@if (showForm()) {
+  <app-employee-form
+    [employee]="formEmployee() ?? null"
+    (saved)="onSaved($event)"
+    (cancelled)="onCancelled()"
+  />
+}

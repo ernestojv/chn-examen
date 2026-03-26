@@ -1,0 +1,88 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="isEditMode ? 'Editar usuario' : 'Nuevo usuario'"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onClose()"
+>
+  @if (errorMessage()) {
+    <p-message severity="error" [text]="errorMessage()" styleClass="w-full mb-4" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-grid">
+
+    <div class="field full-width">
+      <label class="field-label">Empleado asignado <span class="required">*</span></label>
+      <p-select
+        formControlName="employeeId"
+        [options]="employees()"
+        optionValue="id"
+        [filter]="true"
+        filterBy="firstName,lastName,employeeCode"
+        [showClear]="true"
+        placeholder="Selecciona un empleado"
+        styleClass="w-full"
+        [loading]="loadingEmployees()"
+      >
+        <ng-template pTemplate="selectedItem" let-selectedOption>
+          <div class="flex align-items-center gap-2">
+            <div>{{ selectedOption.firstName }} {{ selectedOption.lastName }} ({{ selectedOption.employeeCode }})</div>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="item" let-employee>
+          <div class="flex align-items-center gap-2">
+            <div>{{ employee.firstName }} {{ employee.lastName }} ({{ employee.employeeCode }})</div>
+          </div>
+        </ng-template>
+      </p-select>
+      @if (isInvalid('employeeId')) {
+        <small class="field-error">Debe asignar un empleado al usuario.</small>
+      }
+    </div>
+
+    <div class="field full-width">
+      <label class="field-label">Nombre de usuario <span class="required">*</span></label>
+      <input pInputText formControlName="username" placeholder="juan.perez" class="w-full" maxlength="50" autocomplete="off" />
+      @if (isInvalid('username')) {
+        <small class="field-error">El nombre de usuario es requerido.</small>
+      }
+    </div>
+
+    <div class="field full-width">
+      <label class="field-label">Contraseña @if (!isEditMode) { <span class="required">*</span> }</label>
+      <p-password
+        formControlName="password"
+        [toggleMask]="true"
+        [feedback]="false"
+        styleClass="w-full p-password-fluid"
+        [placeholder]="isEditMode ? 'Dejar en blanco para mantener la actual' : 'Contraseña segura'"
+        [maxLength]="255"
+        autocomplete="new-password"
+      />
+      @if (isInvalid('password')) {
+        <small class="field-error">La contraseña es requerida.</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template #footer>
+    <div class="dialog-footer">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="onClose()"
+        [disabled]="loading()"
+      />
+      <p-button
+        [label]="isEditMode ? 'Guardar cambios' : 'Crear usuario'"
+        icon="pi pi-check"
+        (onClick)="onSubmit()"
+        [loading]="loading()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
