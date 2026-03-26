@@ -64,9 +64,68 @@ Empleamos la imagen base oficial `mssql/server:2022-latest`. El compose incluye 
 - Se encarga de correr las precondiciones con `chn-examen-api/script.sql`.
 - El script de creación es **idempotente** (utiliza sentencias `IF NOT EXISTS` repetidamente), lo que significa que crea las tablas relacionales y el usuario de inicio ('Admin') únicamente si no han sido detectadas, siendo seguro reiniciarlo.
 
-## ♻️ Reinicio limpio (opcional)
+#### Diagrama de Entidad-Relación (ERD)
 
-Si requieres reiniciar y destruir el almacenamiento para correrlo de cero, la persistencia en Docker puede limpiarse usando esta cascada:
+```mermaid
+erDiagram
+    Customer ||--o{ LoanApplication : "solicita"
+    Customer ||--o{ Loan : "posee"
+    Employee ||--|| AppUser : "está asociado a"
+    AppUser ||--o{ LoanApplication : "evalúa"
+    AppUser ||--o{ Payment : "registra"
+    LoanApplication ||--o| Loan : "deriva en"
+    Loan ||--o{ Payment : "recibe"
+
+    Customer {
+        int id PK
+        string first_name
+        string last_name
+        string nit
+        date date_of_birth
+        string address
+        string email
+        string phone_number
+    }
+    Employee {
+        int id PK
+        string first_name
+        string last_name
+        string employee_code
+        string position
+    }
+    AppUser {
+        int id PK
+        string username
+        string password
+        int employee_id FK
+    }
+    LoanApplication {
+        int id PK
+        int customer_id FK
+        decimal requested_amount
+        int term_in_months
+        string status
+        string resolution_details
+        datetime application_date
+        int evaluated_by FK
+    }
+    Loan {
+        int id PK
+        int loan_application_id FK
+        int customer_id FK
+        decimal approved_amount
+        decimal outstanding_balance
+        string payment_status
+    }
+    Payment {
+        int id PK
+        int loan_id FK
+        decimal amount_paid
+        datetime payment_date
+        string payment_method
+        int registered_by FK
+    }
+```
 
 ```bash
 docker compose down -v
